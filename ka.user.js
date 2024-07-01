@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kleinanzeigen Date Gatherer
 // @namespace    http://tampermonkey.net/
-// @version      1.3
+// @version      1.4
 // @description  Gather dates from elements and find the earliest date on Kleinanzeigen
 // @author       SerVB
 // @match        https://www.kleinanzeigen.de/m-meine-anzeigen.html
@@ -10,6 +10,8 @@
 
 (function() {
     'use strict';
+
+    const updateInterval = 500;
 
     function parseDate(dateStr) {
         let parts = dateStr.split('.');
@@ -26,19 +28,16 @@
                 let match = text.match(/^Endet: (\d{2}\.\d{2}\.\d{4})$/);
                 if (match) {
                     let dateStr = match[1];
-                    console.log('Found date:', dateStr);
                     dates.push(parseDate(dateStr));
                 }
             }
         });
 
         if (dates.length === 0) {
-            console.log('No dates found.');
             return null;
         }
 
         dates.sort((a, b) => a - b);
-        console.log('Earliest date:', dates[0]);
         return { earliest: dates[0], count: dates.length };
     }
 
@@ -48,10 +47,7 @@
         let meineAnzeigenElement = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6')).find(el => el.innerText.includes("Meine Anzeigen"));
         if (meineAnzeigenElement) {
             let earliestDate = `${info.earliest.getDate()}.${info.earliest.getMonth() + 1}.${info.earliest.getFullYear()}`;
-            console.log('Updating Meine Anzeigen element with:', `Meine Anzeigen = ${info.count} total, endet am frühesten am ${earliestDate}`);
-            meineAnzeigenElement.innerText = `Meine Anzeigen = ${info.count} total, endet am frühesten am ${earliestDate}`;
-        } else {
-            console.log('Meine Anzeigen element not found.');
+            meineAnzeigenElement.innerText = `Meine Anzeigen = ${info.count} gesamt, endet am frühesten am ${earliestDate}`;
         }
     }
 
@@ -62,25 +58,22 @@
     }
 
     function runScript() {
-        console.log('Required elements are present. Running script.');
+        // console.log('Required elements are present. Running script.');
         let info = findEarliestDate();
-        if (info) {
-            console.log('Info:', info);
-        } else {
-            console.log('No relevant info found.');
-        }
+        // if (info) {
+        //     console.log('Info:', info);
+        // } else {
+        //     console.log('No relevant info found.');
+        // }
         updateMeineAnzeigen(info);
-        console.log('Script finished.');
+        // console.log('Script finished.');
     }
 
-    const observer = new MutationObserver((mutations, obs) => {
+    setInterval(() => {
         if (checkElements()) {
             runScript();
-            obs.disconnect();
         }
-    });
-
-    observer.observe(document.body, { childList: true, subtree: true });
+    }, updateInterval);
 
     console.log('Waiting for required elements to appear.');
 })();
