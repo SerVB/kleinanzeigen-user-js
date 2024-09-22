@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kleinanzeigen Date Gatherer
 // @namespace    http://tampermonkey.net/
-// @version      1.5
+// @version      1.6
 // @description  Gather dates from elements and find the earliest date on Kleinanzeigen
 // @author       SerVB
 // @match        https://www.kleinanzeigen.de/m-meine-anzeigen.html
@@ -19,7 +19,7 @@
     }
 
     function findEarliestDate() {
-        const elements = document.querySelectorAll('body *');
+        const elements = Array.from(document.getElementsByTagName("div"));
         let dates = [];
 
         elements.forEach(element => {
@@ -53,7 +53,7 @@
 
     function checkElements() {
         let meineAnzeigenElement = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6')).find(el => el.innerText.includes("Meine Anzeigen"));
-        let endElements = Array.from(document.querySelectorAll('body *')).filter(el => el.innerText && el.innerText.match(/Endet am\s+(\d{2}\.\d{2}\.\d{4})/));
+        let endElements = Array.from(document.getElementsByTagName("div")).filter(el => el.innerText && el.innerText.match(/^Endet am\s+(\d{2}\.\d{2}\.\d{4})$/))
         return meineAnzeigenElement && endElements.length > 0;
     }
 
