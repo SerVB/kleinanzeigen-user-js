@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kleinanzeigen Date Gatherer
 // @namespace    http://tampermonkey.net/
-// @version      1.7
+// @version      1.8
 // @description  Gather dates from elements and find the earliest date on Kleinanzeigen
 // @author       SerVB
 // @match        https://www.kleinanzeigen.de/m-meine-anzeigen.html
@@ -51,6 +51,16 @@
 
             meineAnzeigenElement.parentElement.style["max-width"] = "100%";
         }
+
+        Array.from(document.getElementsByTagName("button")).forEach(button => {
+            if (button.textContent) {
+                let text = button.textContent;
+                let match = text.match(/^Verlängern$/);
+                if (match && !button.disabled) {
+                    button.style["background"] = "pink";
+                }
+            }
+        });
     }
 
     function checkElements() {
