@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kleinanzeigen Date Gatherer
 // @namespace    http://tampermonkey.net/
-// @version      1.8
+// @version      1.9
 // @description  Gather dates from elements and find the earliest date on Kleinanzeigen
 // @author       SerVB
 // @match        https://www.kleinanzeigen.de/m-meine-anzeigen.html
@@ -56,7 +56,7 @@
             if (button.textContent) {
                 let text = button.textContent;
                 let match = text.match(/^Verlängern$/);
-                if (match && !button.disabled) {
+                if (match && button.ariaDisabled === "false") {
                     button.style["background"] = "pink";
                 }
             }
