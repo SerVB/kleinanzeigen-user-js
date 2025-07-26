@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kleinanzeigen Date Gatherer
 // @namespace    http://tampermonkey.net/
-// @version      1.9
+// @version      1.10
 // @description  Gather dates from elements and find the earliest date on Kleinanzeigen
 // @author       SerVB
 // @match        https://www.kleinanzeigen.de/m-meine-anzeigen.html
@@ -14,20 +14,20 @@
     const updateInterval = 500;
 
     function parseDate(dateStr) {
-        let parts = dateStr.split('.');
+        const parts = dateStr.split('.');
         return new Date(parts[2], parts[1] - 1, parts[0]);
     }
 
     function findEarliestDate() {
         const elements = Array.from(document.getElementsByTagName("div"));
-        let dates = [];
+        const dates = [];
 
         elements.forEach(element => {
             if (element.textContent) {
-                let text = element.textContent;
-                let match = text.match(/^Endet am\s+(\d{2}\.\d{2}\.\d{4})$/);
+                const text = element.textContent;
+                const match = text.match(/^Endet am\s+(\d{2}\.\d{2}\.\d{4})$/);
                 if (match) {
-                    let dateStr = match[1];
+                    const dateStr = match[1];
                     dates.push(parseDate(dateStr));
                 }
             }
@@ -44,9 +44,9 @@
     function updateMeineAnzeigen(info) {
         if (!info) return;
 
-        let meineAnzeigenElement = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6')).find(el => el.innerText.includes("Meine Anzeigen"));
+        const meineAnzeigenElement = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6')).find(el => el.innerText.includes("Meine Anzeigen"));
         if (meineAnzeigenElement) {
-            let earliestDate = `${info.earliest.getDate()}.${info.earliest.getMonth() + 1}.${info.earliest.getFullYear()}`;
+            const earliestDate = `${info.earliest.getDate()}.${info.earliest.getMonth() + 1}.${info.earliest.getFullYear()}`;
             meineAnzeigenElement.innerText = `Meine Anzeigen = ${info.count} gesamt, endet am frühesten am ${earliestDate}`;
 
             meineAnzeigenElement.parentElement.style["max-width"] = "100%";
@@ -56,29 +56,23 @@
             if (button.textContent) {
                 let text = button.textContent;
                 let match = text.match(/^Verlängern$/);
-                if (match && button.ariaDisabled === "false") {
-                    button.style["background"] = "pink";
+                if (match) {
+                  button.classList.add("verlängern");
                 }
             }
         });
     }
 
     function checkElements() {
-        let meineAnzeigenElement = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6')).find(el => el.innerText.includes("Meine Anzeigen"));
-        let endElements = Array.from(document.getElementsByTagName("div")).filter(el => el.innerText && el.innerText.match(/^Endet am\s+(\d{2}\.\d{2}\.\d{4})$/))
+        // todo: is it even needed to check?
+        const meineAnzeigenElement = Array.from(document.querySelectorAll('h1, h2, h3, h4, h5, h6')).find(el => el.innerText.includes("Meine Anzeigen"));
+        const endElements = Array.from(document.getElementsByTagName("div")).filter(el => el.innerText && el.innerText.match(/^Endet am\s+(\d{2}\.\d{2}\.\d{4})$/));
         return meineAnzeigenElement && endElements.length > 0;
     }
 
     function runScript() {
-        // console.log('Required elements are present. Running script.');
-        let info = findEarliestDate();
-        // if (info) {
-        //     console.log('Info:', info);
-        // } else {
-        //     console.log('No relevant info found.');
-        // }
+        const info = findEarliestDate();
         updateMeineAnzeigen(info);
-        // console.log('Script finished.');
     }
 
     setInterval(() => {
@@ -88,4 +82,12 @@
     }, updateInterval);
 
     console.log('Waiting for required elements to appear.');
+
+    const verlaengernStyle = document.createElement('style');
+    verlaengernStyle.textContent = `
+      button[aria-disabled="false"].verlängern {
+        background: pink !important;
+      }
+    `;
+    document.head.appendChild(verlaengernStyle);
 })();
