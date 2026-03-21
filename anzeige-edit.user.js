@@ -1,12 +1,13 @@
 // ==UserScript==
 // @name         Kleinanzeigen: Anzeigen öffnen & Preis-Knöpfe & Anzeige ansehen
 // @namespace    http://tampermonkey.net/
-// @version      1.0
+// @version      1.1
 // @description  Öffnet Anzeigen über 1€ zum Bearbeiten + fügt Preis-Buttons hinzu + Anzeige ansehen
 // @match        https://www.kleinanzeigen.de/m-meine-anzeigen.html
 // @match        https://www.kleinanzeigen.de/p-anzeige-bearbeiten.html*
 // @match        https://www.kleinanzeigen.de/p-anzeige-aufgeben-bestaetigung.html*
 // @grant        none
+// @author       SerVB
 // ==/UserScript==
 
 (function () {
@@ -49,21 +50,25 @@
 
                     const euros = parseFloat(`${match[1]}.${match[2] || 0}`);
                     if (euros > 1) {
-                        console.log(`🔧 Öffne: ${titleNode.textContent.trim()} (${euros} €)`);
-                        const link = document.createElement('a');
-                        link.href = editLink.href;
-                        link.target = '_blank';
-                        link.rel = 'noopener noreferrer';
-                        link.style.display = 'none';
-                        document.body.appendChild(link);
-                        link.click();
-                        document.body.removeChild(link);
+                        setTimeout(() => {
+                          console.log(`🔧 Öffne: ${titleNode.textContent.trim()} (${euros} €)`);
+                          const link = document.createElement('a');
+                          link.href = editLink.href;
+                          link.target = '_blank';
+                          link.rel = 'noopener noreferrer';
+                          link.style.display = 'none';
+                          document.body.appendChild(link);
+                          link.click();
+                          document.body.removeChild(link);
+                        }, opened*200);
                         opened++;
                     }
                 }
 
-                button.textContent = `✅ Fertig! ${opened} geöffnet`;
-                button.style.background = '#28a745';
+                setTimeout(() => {
+                  button.textContent = `✅ Fertig! ${opened} geöffnet`;
+                  button.style.background = '#28a745';
+                }, opened*200);
             });
 
             container.appendChild(button);
