@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         Kleinanzeigen: Anzeigen öffnen & Preis-Knöpfe & Anzeige ansehen
 // @namespace    http://tampermonkey.net/
-// @version      1.1
+// @version      1.2
 // @description  Öffnet Anzeigen über 1€ zum Bearbeiten + fügt Preis-Buttons hinzu + Anzeige ansehen
 // @match        https://www.kleinanzeigen.de/m-meine-anzeigen.html
 // @match        https://www.kleinanzeigen.de/p-anzeige-bearbeiten.html*
@@ -79,12 +79,15 @@
 
     if (window.location.href.includes('/p-anzeige-bearbeiten.html')) {
         function addFixedPriceButtons() {
-            const priceInput = document.getElementById('micro-frontend-price');
-            const submitButton = document.getElementById('pstad-submit');
+            const priceInput = document.getElementById('ad-price-amount');
+            const submitButton = [...document.querySelectorAll('button')].find(b => b.textContent.trim() === 'Anzeige speichern');
 
             if (!priceInput || !submitButton) return;
 
-            const wrapper = priceInput.closest('.relative');
+            const wrapper2 = priceInput.closest('.w-1\\/3');
+            if (!wrapper2) return;
+
+            const wrapper = wrapper2.closest('.flex-row');
             if (!wrapper) return;
 
             const currentPrice = parseInt(priceInput.value, 10);
@@ -143,7 +146,7 @@
                 container.appendChild(btn);
             }
 
-            wrapper.appendChild(container);
+            wrapper.prepend(container);
         }
 
         window.addEventListener('load', () => setTimeout(addFixedPriceButtons, 500));
