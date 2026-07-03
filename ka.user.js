@@ -1,8 +1,8 @@
 // ==UserScript==
-// @name         Kleinanzeigen Date Gatherer
+// @name         Kleinanzeigen Date Gatherer, Ad Prolongation Simplifier
 // @namespace    http://tampermonkey.net/
-// @version      1.10
-// @description  Gather dates from elements and find the earliest date on Kleinanzeigen
+// @version      1.11
+// @description  Gather dates from elements and find the earliest date on Kleinanzeigen; simplify prolonging
 // @author       SerVB
 // @match        https://www.kleinanzeigen.de/m-meine-anzeigen.html
 // @grant        none
@@ -75,10 +75,37 @@
         updateMeineAnzeigen(info);
     }
 
+    function handleExtensionDialog() {
+        const dialog = document.querySelector('dialog[aria-labelledby="extension-modal-title"]');
+        if (!dialog || dialog.dataset.autoHandled === "1") return;
+        dialog.dataset.autoHandled = "1"; // sofort markieren, damit das 500ms-Intervall nicht erneut reinspringt
+
+        const radio = dialog.querySelector('input[value="extend-only"]');
+        const label = dialog.querySelector('label[for="extension-options-extend-only"]');
+        if (!radio) { delete dialog.dataset.autoHandled; return; }
+
+        (label || radio).click(); // "Nur verlängern" auswählen
+
+        let attempts = 0;
+        const timer = setInterval(() => {
+            attempts++;
+            const confirmBtn = Array.from(dialog.querySelectorAll("button"))
+                .find(b => b.textContent && b.textContent.includes("Anzeige verlängern"));
+            const enabled = confirmBtn && confirmBtn.getAttribute("aria-disabled") !== "true" && !confirmBtn.disabled;
+            if (enabled) {
+                clearInterval(timer);
+                confirmBtn.click(); // Bestätigung klicken
+            } else if (attempts > 200) { // max. ~2s warten
+                clearInterval(timer);
+            }
+        }, 10);
+    }
+
     setInterval(() => {
         if (checkElements()) {
             runScript();
         }
+        handleExtensionDialog();
     }, updateInterval);
 
     console.log('Waiting for required elements to appear.');
