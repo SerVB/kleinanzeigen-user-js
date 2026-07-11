@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         Kleinanzeigen: Anzeigen öffnen & Preis-Knöpfe & Anzeige ansehen
 // @namespace    http://tampermonkey.net/
-// @version      1.2
-// @description  Öffnet Anzeigen über 1€ zum Bearbeiten + fügt Preis-Buttons hinzu + Anzeige ansehen
+// @version      1.3
+// @description  Öffnet Anzeigen über 1€ zum Bearbeiten + fügt Preis-Buttons hinzu + klickt "Ohne Hochschieben" + Anzeige ansehen
 // @match        https://www.kleinanzeigen.de/m-meine-anzeigen.html
 // @match        https://www.kleinanzeigen.de/p-anzeige-bearbeiten.html*
 // @match        https://www.kleinanzeigen.de/p-anzeige-aufgeben-bestaetigung.html*
@@ -12,6 +12,31 @@
 
 (function () {
     'use strict';
+
+    function autoDismissHochschiebenDialog() {
+        let lastClick = 0;
+
+        function tryDismiss() {
+            // Doppelklicks / Race-Conditions vermeiden
+            if (Date.now() - lastClick < 1500) return;
+
+            const btn = [...document.querySelectorAll('button')].find(b =>
+                b.textContent.replace(/\s+/g, ' ').trim() === 'Ohne Hochschieben weiter'
+            );
+
+            if (btn) {
+                lastClick = Date.now();
+                console.log('✅ "Ohne Hochschieben weiter" automatisch geklickt');
+                btn.click();
+            }
+        }
+
+        // Falls der Dialog beim Laden schon da ist:
+        tryDismiss();
+
+        const observer = new MutationObserver(tryDismiss);
+        observer.observe(document.body, { childList: true, subtree: true });
+    }
 
     if (window.location.href.includes('/m-meine-anzeigen.html')) {
         function createOverviewButton() {
@@ -179,4 +204,6 @@
         window.addEventListener('load', () => setInterval(ensureAdViewButton, 500));
         console.log("ensuring button...");
     }
+
+    window.addEventListener('load', () => setTimeout(autoDismissHochschiebenDialog, 500));
 })();
